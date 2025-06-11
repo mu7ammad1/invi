@@ -45,7 +45,7 @@ export default function RootLayout({
             </div>
           </nav>
 
-          <main className="gap-10 space-y-20 flex flex-col justify-center items-center w-full *:max-w-7xl *:w-full">
+          <main className="gap-10 space-y-20 flex flex-col justify-center items-center w-full *:max-w-7xl *:w-full max-lg:pt-10">
             {children}
           </main>
           <Toaster />
