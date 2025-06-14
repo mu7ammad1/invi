@@ -11,15 +11,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../ui/alert-dialog'
 import { toast } from 'sonner'
+import { Textarea } from '../ui/textarea'
 
 type Customer = {
   id: number
-  name: string
-  phone: string
-  email?: string
-  address?: string
+  name?: string
+  phone: string[]
+  address?: string[]
+  createdAt?: Date
+  notes?: string
 }
 
 export default function CustomersComponent() {
@@ -28,15 +40,22 @@ export default function CustomersComponent() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({
     name: '',
-    phone: '',
-    email: '',
-    address: '',
+    phone: [],
+    address: [],
   })
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem('customers')
-    if (stored) setCustomers(JSON.parse(stored))
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      const fixed = parsed.map((c: Customer) => ({
+        ...c,
+        phone: Array.isArray(c.phone) ? c.phone : [c.phone].filter(Boolean),
+        address: Array.isArray(c.address) ? c.address : [c.address].filter(Boolean),
+      }))
+      setCustomers(fixed)
+    }
   }, [])
 
   const saveCustomers = (updated: Customer[]) => {
@@ -44,9 +63,19 @@ export default function CustomersComponent() {
     setCustomers(updated)
   }
 
+  const newId = Date.now()
   const addOrUpdateCustomer = () => {
-    if (!newCustomer.name || !newCustomer.phone) {
-      alert('الاسم ورقم الهاتف مطلوبان')
+    if (!newCustomer.phone || newCustomer.phone.length === 0) {
+      toast.error('رقم الهاتف مطلوب')
+      return
+    }
+
+    const exists = customers.some(c =>
+      c.phone.some(p => newCustomer.phone?.includes(p)) &&
+      (!selectedCustomer || c.id !== selectedCustomer.id)
+    )
+    if (exists) {
+      toast.error('رقم الهاتف مسجل بالفعل')
       return
     }
 
@@ -57,24 +86,24 @@ export default function CustomersComponent() {
       saveCustomers(updated)
     } else {
       const newC: Customer = {
-        id: Math.floor(Math.random() * 9000 + 1000),
-        name: newCustomer.name!,
-        phone: newCustomer.phone!,
-        email: newCustomer.email,
+        id: newId,
+        name: newCustomer.name || `${newId}`,
+        phone: newCustomer.phone,
         address: newCustomer.address,
+        notes: newCustomer.notes || '',
+        createdAt: new Date()
       }
       saveCustomers([newC, ...customers])
     }
 
-    setNewCustomer({ name: '', phone: '', email: '', address: '' })
+    setNewCustomer({ name: '', phone: [], address: [] })
     setSelectedCustomer(null)
     setDialogOpen(false)
   }
 
   const filtered = customers.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.phone.includes(search) ||
-    (c.email?.toLowerCase().includes(search.toLowerCase()) ?? false)
+    (c.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
+    c.phone.some(p => p.includes(search))
   )
 
   return (
@@ -94,7 +123,7 @@ export default function CustomersComponent() {
           <DialogTrigger
             className='bg-primary rounded-xl font-medium p-2 px-4 text-white'
             onClick={() => {
-              setNewCustomer({ name: '', phone: '', email: '', address: '' })
+              setNewCustomer({ name: '', phone: [], address: [] })
               setSelectedCustomer(null)
             }}
           >
@@ -111,20 +140,32 @@ export default function CustomersComponent() {
                   onChange={e => setNewCustomer({ ...newCustomer, name: e.target.value })}
                 />
                 <Input
-                  placeholder='رقم الهاتف'
-                  value={newCustomer.phone}
-                  onChange={e => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                />
-                <Input
-                  placeholder='البريد الإلكتروني (اختياري)'
-                  value={newCustomer.email}
-                  onChange={e => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                  placeholder='رقم الهاتف (مفصول بنقطة)'
+                  value={newCustomer.phone?.join('. ') || ''}
+                  onChange={e =>
+                    setNewCustomer({
+                      ...newCustomer,
+                      phone: e.target.value.split('.').map(s => s.trim()).filter(Boolean)
+                    })
+                  }
                 />
                 <Input
                   placeholder='العنوان (اختياري)'
-                  value={newCustomer.address}
-                  onChange={e => setNewCustomer({ ...newCustomer, address: e.target.value })}
+                  value={newCustomer.address?.join(', ') || ''}
+                  onChange={e =>
+                    setNewCustomer({
+                      ...newCustomer,
+                      address: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                    })
+                  }
                 />
+                <Textarea
+                  placeholder='ملاحظات (اختياري)'
+                  className='border p-2 rounded-md min-h-[80px]'
+                  value={newCustomer.notes || ''}
+                  onChange={e => setNewCustomer({ ...newCustomer, notes: e.target.value })}
+                />
+
                 <Button onClick={addOrUpdateCustomer}>
                   {selectedCustomer ? 'تحديث' : 'حفظ'}
                 </Button>
@@ -140,9 +181,11 @@ export default function CustomersComponent() {
             <div key={customer.id} className='bg-gray-50 flex flex-col justify-between'>
               <div>
                 <p className='font-bold text-lg'>{customer.name}</p>
-                <p className='text-sm text-gray-600'>📞 {customer.phone}</p>
-                {customer.email && <p className='text-sm text-gray-600'>📧 {customer.email}</p>}
-                {customer.address && <p className='text-sm text-gray-600'>📍 {customer.address}</p>}
+                <p className='text-sm text-gray-600'>📞 {customer.phone.join(', ')}</p>
+                {customer.address && <p className='text-sm text-gray-600'>📍 {customer.address.join(', ')}</p>}
+                {customer.notes && (
+                  <p className='text-sm text-gray-600'>📝 {customer.notes}</p>
+                )}
               </div>
               <div className='flex gap-2 mt-4'>
                 <Button
@@ -160,23 +203,29 @@ export default function CustomersComponent() {
                     حـذف
                   </AlertDialogTrigger>
                   <AlertDialogContent dir='rtl'>
-                    <AlertDialogHeader className='flex flex-col w-full justify-start '>
-                      <AlertDialogTitle className='text-center w-full'>هـل انـت مـتـأكـد مـن حـذف  العميل</AlertDialogTitle>
-                      <AlertDialogDescription className='flex flex-col w-full text-start'>
-                        <span>هل أنت متأكد إنك عايز تحذف العميل ده؟</span>
-                        <span>مش هتقدر ترجّعه تاني، لكن ممكن تلاقي الطلبات والتقارير القديمة المرتبطة بيه لسه محفوظة.</span>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className='text-center'>
+                        هـل انـت مـتـأكـد مـن حـذف العميل؟
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        <span>هل أنت متأكد إنك عايز تحذف العميل ده؟</span><br />
+                        <span>مش هتقدر ترجّعه تاني، لكن ممكن تلاقي الطلبات القديمة لسه محفوظة.</span>
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className='flex flex-col w-full'>
+                    <AlertDialogFooter>
                       <AlertDialogCancel>الـغـاء</AlertDialogCancel>
-                      <AlertDialogAction className='bg-rose-500' onClick={() => {
-                        toast.success("تم حذف المنتج بنجاح")
-                        saveCustomers(customers.filter(c => c.id !== customer.id))
-                      }}>حـذف العميل</AlertDialogAction>
+                      <AlertDialogAction
+                        className='bg-rose-500'
+                        onClick={() => {
+                          toast.success('تم حذف العميل بنجاح')
+                          saveCustomers(customers.filter(c => c.id !== customer.id))
+                        }}
+                      >
+                        حـذف العميل
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-
               </div>
             </div>
           ))

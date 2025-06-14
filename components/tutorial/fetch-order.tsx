@@ -16,9 +16,10 @@ import { Badge } from '../ui/badge'
 type Product = {
   id: number
   name: string
-  quantity: number
-  category: string
-  price: number
+  quantity: string
+  priceSell: string
+  priceBuy: string
+  images?: string
   description?: string
 }
 
@@ -26,34 +27,33 @@ interface Order {
   id: number;
   created_at: string;
   customer: string;
-  products: string[]; // Make sure this is string[] and not string
   status: string;
   notes: string;
+  rating?: string;
+  products: { name: string; quantity: string }[];
 }
 
 export default function OrderComponent() {
   const [orders, setOrders] = useState<Order[]>([])
   const [products, setProducts] = useState<Product[]>([])
+  const statuses = ["pending", "current", "completed", "cancelled"]
 
   const [search, setSearch] = useState("")
   const [newOrder, setNewOrder] = useState<Partial<Order>>({
     customer: '',
-    products: [], // Initialize as empty array
+    products: [],
     status: 'pending',
     notes: '',
+    rating: '',
   })
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
   useEffect(() => {
     const orders = localStorage.getItem('orders')
-    if (orders) {
-      setOrders(JSON.parse(orders))
-    }
+    if (orders) setOrders(JSON.parse(orders))
     const products = localStorage.getItem('products')
-    if (products) {
-      setProducts(JSON.parse(products))
-    }
+    if (products) setProducts(JSON.parse(products))
   }, [])
 
   const saveOrders = (updatedOrders: Order[]) => {
@@ -66,67 +66,72 @@ export default function OrderComponent() {
       alert('Customer name and products are required')
       return
     }
-    // تقليل الكمية من المخزون عند إضافة طلب جديد
-    const updatedProducts = products.map(prod => {
-      const usedCount = (newOrder.products || []).filter(p => p === prod.name).length
-      return {
-        ...prod,
-        quantity: prod.quantity - usedCount,
-      }
+
+    const outOfStock = (newOrder.products || []).some(prodObj => {
+      const product = products.find(p => p.name === prodObj.name)
+      return (!product || Number(product.quantity) < Number(prodObj.quantity))
     })
-    localStorage.setItem('products', JSON.stringify(updatedProducts))
-    setProducts(updatedProducts)
+    if (outOfStock) {
+      alert('في منتج أو أكثر الكمية غير كافية في المخزون!')
+      return
+    }
+
+    if (!selectedOrder) {
+      const updatedProducts = products.map(prod => {
+        const used = (newOrder.products || []).find(p => p.name === prod.name)
+        return used ? {
+          ...prod,
+          quantity: String(Number(prod.quantity) - Number(used.quantity))
+        } : prod
+      })
+      localStorage.setItem('products', JSON.stringify(updatedProducts))
+      setProducts(updatedProducts)
+    }
 
     if (selectedOrder) {
-      // تعديل الطلب
       const updated = orders.map(order =>
-        order.id === selectedOrder.id
-          ? {
-            ...order,
-            customer: newOrder.customer || order.customer,
-            products: (newOrder.products || order.products) as string[],
-            status: newOrder.status || order.status,
-            notes: newOrder.notes || order.notes,
-          }
-          : order
+        order.id === selectedOrder.id ? {
+          ...order,
+          customer: newOrder.customer || order.customer,
+          products: newOrder.products || order.products,
+          status: newOrder.status || order.status,
+          notes: newOrder.notes || order.notes,
+          rating: newOrder.rating !== undefined ? newOrder.rating : order.rating,
+        } : order
       )
       saveOrders(updated)
     } else {
-      // إضافة طلب جديد
       const order: Order = {
         id: Math.floor(1000 + Math.random() * 9000),
         created_at: new Date().toISOString(),
-        customer: newOrder.customer || 'Unknown',
-        products: (newOrder.products || []) as string[],
+        customer: newOrder.customer || '',
+        products: newOrder.products || [],
         status: newOrder.status || 'pending',
         notes: newOrder.notes || '',
+        rating: newOrder.rating || '',
       }
       saveOrders([order, ...orders])
     }
-    setNewOrder({ customer: '', products: [], status: 'pending', notes: '' })
+
+    setNewOrder({ customer: '', products: [], status: 'pending', notes: '', rating: '' })
     setSelectedOrder(null)
     setDialogOpen(false)
   }
 
   const getStatusBg = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'current':
-        return 'bg-blue-100'
-      case 'completed':
-        return 'bg-green-100'
-      case 'pending':
-        return 'bg-yellow-100'
-      case 'cancelled':
-        return 'bg-red-100'
-      default:
-        return 'bg-gray-100'
+      case 'current': return 'bg-blue-100'
+      case 'completed': return 'bg-green-100'
+      case 'pending': return 'bg-yellow-100'
+      case 'cancelled': return 'bg-red-100'
+      default: return 'bg-gray-100'
     }
   }
 
   const filteredOrders = orders.filter(order =>
     order.id.toString().includes(search) ||
     order.customer.toLowerCase().includes(search.toLowerCase()) ||
-    order.products.join(', ').toLowerCase().includes(search.toLowerCase())
+    order.products.map(p => p.name).join(', ').toLowerCase().includes(search.toLowerCase())
   )
 
   return (
@@ -146,7 +151,7 @@ export default function OrderComponent() {
             className='bg-primary rounded-xl font-medium p-2 px-3 text-sm text-white'
             onClick={() => {
               setSelectedOrder(null)
-              setNewOrder({ customer: '', products: [], status: 'pending', notes: '' })
+              setNewOrder({ customer: '', products: [], status: 'pending', notes: '', rating: '' })
             }}
           >
             New order
@@ -157,42 +162,67 @@ export default function OrderComponent() {
               <DialogDescription>
                 {selectedOrder ? 'Update the fields to edit the order.' : 'Fill the fields to add a new order.'}
               </DialogDescription>
-
               <div className='flex flex-col gap-3 mt-4'>
                 <Input
                   placeholder="Customer name"
                   value={newOrder.customer}
                   onChange={(e) => setNewOrder({ ...newOrder, customer: e.target.value })}
                 />
-                <select
-                  multiple
-                  className="border rounded-md p-2 h-32"
-                  value={newOrder.products}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                    const selected = Array.from(e.target.selectedOptions, (option) => option.value)
-                    setNewOrder({ ...newOrder, products: selected })
-                  }}
-                >
-                  {products.map(product => (
-                    <option key={product.id} value={product.name}>
-                      {product.name} ({product.quantity} متاح)
-                    </option>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-64  overflow-y-auto">
+                  {products.map((product) => {
+                    const selected = newOrder.products?.find(p => p.name === product.name)
+                    return (
+                      <div key={product.id} className="border p-2 rounded-md shadow-sm">
+                        {product.images && (
+                          <img src={product.images} alt={product.name} className="h-24 w-full object-cover rounded-md mb-2" />
+                        )}
+                        <h4 className="font-medium">{product.name}</h4>
+                        <p className="text-sm text-gray-500">المتاح: {product.quantity} كجم</p>
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="كم كيلو؟"
+                          value={selected?.quantity || ''}
+                          onChange={(e) => {
+                            const quantity = e.target.value
+                            setNewOrder({
+                              ...newOrder,
+                              products: [
+                                ...(newOrder.products?.filter(p => p.name !== product.name) || []),
+                                { name: product.name, quantity }
+                              ]
+                            })
+                          }}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {statuses.map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => setNewOrder({ ...newOrder, status })}
+                      className={`px-4 py-2 rounded-md border ${newOrder.status === status ? "bg-blue-500 text-white" : "bg-white text-black"}`}
+                    >
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </button>
                   ))}
-                </select>
-                <select
-                  value={newOrder.status}
-                  onChange={(e) => setNewOrder({ ...newOrder, status: e.target.value })}
-                  className="border rounded-md p-2"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="current">Current</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
+                </div>
                 <Input
                   placeholder="Notes"
                   value={newOrder.notes}
                   onChange={(e) => setNewOrder({ ...newOrder, notes: e.target.value })}
+                />
+                <Input
+                  placeholder="Rating (1 - 5)"
+                  value={newOrder.rating}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    if (/^\d*$/.test(val) && (+val <= 5 || val === '')) {
+                      setNewOrder({ ...newOrder, rating: val })
+                    }
+                  }}
                 />
                 <Button onClick={addOrUpdateOrder}>
                   {selectedOrder ? 'Update' : 'Save'}
@@ -205,13 +235,13 @@ export default function OrderComponent() {
 
       <section className='grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-10 *:rounded-2xl *:border *:p-3 *:h-72' dir='rtl'>
         {filteredOrders.length > 0 ? (
-          filteredOrders.map(({ id, created_at, customer, products, status, notes }) => {
+          filteredOrders.map((order) => {
+            const { id, created_at, customer, products: orderProducts, status, notes } = order
             const formattedDate = new Date(created_at).toLocaleString('ar-EG', {
               dateStyle: 'medium',
               timeStyle: 'short',
               hour12: true,
             })
-
             return (
               <div key={id} className={`${getStatusBg(status)} p-4 rounded-lg flex flex-col justify-between`}>
                 <div>
@@ -221,7 +251,7 @@ export default function OrderComponent() {
                   </div>
                   <p className='text-sm text-gray-500'>{formattedDate}</p>
                   <p className='font-medium'>{customer}</p>
-                  <p className='truncate'>{products.join(', ')}</p>
+                  <p className='truncate'>{orderProducts.map(p => `${p.name} (${p.quantity} كجم)`).join(', ')}</p>
                   {notes && <p className='text-xs italic text-gray-600'>Notes: {notes}</p>}
                 </div>
                 <div className='flex gap-2 mt-4'>
@@ -229,8 +259,8 @@ export default function OrderComponent() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setSelectedOrder({ id, created_at, customer, products, status, notes })
-                      setNewOrder({ customer, products, status, notes })
+                      setSelectedOrder(order)
+                      setNewOrder({ customer, products: orderProducts, status, notes, rating: order.rating })
                       setDialogOpen(true)
                     }}
                   >
@@ -241,6 +271,17 @@ export default function OrderComponent() {
                     size="sm"
                     onClick={() => {
                       if (confirm('Are you sure you want to delete this order?')) {
+                        const orderToDelete = orders.find(order => order.id === id)
+                        if (!orderToDelete) return
+                        const restoredProducts = products.map((product) => {
+                          const used = orderToDelete.products.find(p => p.name === product.name)
+                          return used ? {
+                            ...product,
+                            quantity: String(Number(product.quantity) + Number(used.quantity))
+                          } : product
+                        })
+                        localStorage.setItem('products', JSON.stringify(restoredProducts))
+                        setProducts(restoredProducts)
                         saveOrders(orders.filter(order => order.id !== id))
                       }
                     }}
@@ -253,7 +294,7 @@ export default function OrderComponent() {
           })
         ) : (
           <div className='col-span-full text-2xl text-center font-medium text-gray-800 border-none'>
-            دورنا في كل حتة... حتى تحت السجادة! 🧹.
+            دورنا في كل حتة... حتى تحت السجادة! 🧹
           </div>
         )}
       </section>
