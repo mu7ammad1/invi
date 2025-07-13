@@ -1,4 +1,3 @@
-import { ChartAreaInteractive } from "@/components/chart-bar-interactive";
 import { ChartBarStacked } from "@/components/tutorial/chart-bar-stacked";
 import { Button } from "@/components/ui/button";
 import {
