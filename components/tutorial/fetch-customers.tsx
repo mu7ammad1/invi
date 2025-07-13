@@ -24,6 +24,7 @@ import {
 } from '../ui/alert-dialog'
 import { toast } from 'sonner'
 import { Textarea } from '../ui/textarea'
+import { LucideMousePointerSquareDashed } from 'lucide-react'
 
 type Customer = {
   id: number
@@ -49,12 +50,15 @@ export default function CustomersComponent() {
     const stored = localStorage.getItem('customers')
     if (stored) {
       const parsed = JSON.parse(stored)
-      const fixed = parsed.map((c: Customer) => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fixed = parsed.map((c: any) => ({
         ...c,
+        createdAt: c.createdAt ? new Date(c.createdAt) : new Date(),
         phone: Array.isArray(c.phone) ? c.phone : [c.phone].filter(Boolean),
         address: Array.isArray(c.address) ? c.address : [c.address].filter(Boolean),
       }))
       setCustomers(fixed)
+
     }
   }, [])
 
@@ -63,7 +67,7 @@ export default function CustomersComponent() {
     setCustomers(updated)
   }
 
-  const newId = Date.now()
+  const newId = customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1
   const addOrUpdateCustomer = () => {
     if (!newCustomer.phone || newCustomer.phone.length === 0) {
       toast.error('رقم الهاتف مطلوب')
@@ -87,13 +91,15 @@ export default function CustomersComponent() {
     } else {
       const newC: Customer = {
         id: newId,
-        name: newCustomer.name || `${newId}`,
+        name: newCustomer.name?.trim() || `عميل - ${filtered.length + 1}`,
         phone: newCustomer.phone,
         address: newCustomer.address,
         notes: newCustomer.notes || '',
         createdAt: new Date()
       }
-      saveCustomers([newC, ...customers])
+      saveCustomers([newC, ...customers].sort((a, b) =>
+        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      ))
     }
 
     setNewCustomer({ name: '', phone: [], address: [] })
@@ -101,10 +107,11 @@ export default function CustomersComponent() {
     setDialogOpen(false)
   }
 
-  const filtered = customers.filter(c =>
-    (c.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
-    c.phone.some(p => p.includes(search))
-  )
+  const filtered = customers.filter(c => {
+    if (!search.trim()) return true
+    return (c.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      c.phone.some(p => p.includes(search))
+  })
 
   return (
     <main className='p-4'>
@@ -127,7 +134,7 @@ export default function CustomersComponent() {
               setSelectedCustomer(null)
             }}
           >
-            + عميل جديد
+            + <span className='max-sm:hidden'>عميل جديد </span>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -151,13 +158,8 @@ export default function CustomersComponent() {
                 />
                 <Input
                   placeholder='العنوان (اختياري)'
-                  value={newCustomer.address?.join(', ') || ''}
-                  onChange={e =>
-                    setNewCustomer({
-                      ...newCustomer,
-                      address: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                    })
-                  }
+                  value={newCustomer.address || ''}
+                  onChange={e => setNewCustomer({ ...newCustomer, address: [e.target.value] })}
                 />
                 <Textarea
                   placeholder='ملاحظات (اختياري)'
@@ -180,58 +182,80 @@ export default function CustomersComponent() {
           filtered.map(customer => (
             <div key={customer.id} className='bg-gray-50 flex flex-col justify-between'>
               <div>
+                {customer.createdAt && (
+                  <p className='text-xs text-gray-400 mt-1'>
+                    تم الإنشاء في: {new Date(customer.createdAt).toLocaleString('ar-EG')}
+                  </p>
+                )}
                 <p className='font-bold text-lg'>{customer.name}</p>
                 <p className='text-sm text-gray-600'>📞 {customer.phone.join(', ')}</p>
-                {customer.address && <p className='text-sm text-gray-600'>📍 {customer.address.join(', ')}</p>}
+                {customer.address && customer.address.length > 0 && (
+                  <p className='text-sm text-gray-600'>📍 {customer.address.join(', ')}</p>
+                )}
                 {customer.notes && (
                   <p className='text-sm text-gray-600'>📝 {customer.notes}</p>
                 )}
               </div>
-              <div className='flex gap-2 mt-4'>
-                <Button
-                  size='sm'
-                  onClick={() => {
-                    setSelectedCustomer(customer)
-                    setNewCustomer(customer)
-                    setDialogOpen(true)
-                  }}
-                >
-                  تعديل
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger className='bg-white border px-3 rounded-sm'>
-                    حـذف
-                  </AlertDialogTrigger>
-                  <AlertDialogContent dir='rtl'>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className='text-center'>
-                        هـل انـت مـتـأكـد مـن حـذف العميل؟
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        <span>هل أنت متأكد إنك عايز تحذف العميل ده؟</span><br />
-                        <span>مش هتقدر ترجّعه تاني، لكن ممكن تلاقي الطلبات القديمة لسه محفوظة.</span>
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>الـغـاء</AlertDialogCancel>
-                      <AlertDialogAction
-                        className='bg-rose-500'
-                        onClick={() => {
-                          toast.success('تم حذف العميل بنجاح')
-                          saveCustomers(customers.filter(c => c.id !== customer.id))
-                        }}
-                      >
-                        حـذف العميل
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+              <div className='flex justify-between items-center gap-2 mt-4'>
+                <div className='flex justify-between items-center gap-2'>
+                  <Button
+                    size='sm'
+                    onClick={() => {
+                      setSelectedCustomer(customer)
+                      setNewCustomer(customer)
+                      setDialogOpen(true)
+                    }}
+                  >
+                    تعديل
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger className='bg-rose-500 text-white border px-3 py-1 rounded-xl'>
+                      حـذف
+                    </AlertDialogTrigger>
+                    <AlertDialogContent dir='rtl'>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className='text-right'>
+                          هـل انـت مـتـأكـد مـن حـذف العميل؟
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className='text-right'>
+                          <span>هل أنت متأكد إنك عايز تحذف العميل ده؟</span><br />
+                          <span>مش هتقدر ترجّعه تاني.</span>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>الـغـاء</AlertDialogCancel>
+                        <AlertDialogAction
+                          className='bg-rose-500'
+                          onClick={() => {
+                            toast.success(selectedCustomer ? 'تم تحديث العميل' : 'تم إضافة العميل بنجاح')
+                            saveCustomers(customers.filter(c => c.id !== customer.id))
+                          }}
+                        >
+                          حـذف العميل
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+                <div>
+                  <Button
+                    size='sm'
+                    onClick={() => {
+                      setSelectedCustomer(customer)
+                      setNewCustomer(customer)
+                      setDialogOpen(true)
+                    }}
+                    variant={'default'}
+                  >
+                    <LucideMousePointerSquareDashed />
+                  </Button>
+                </div>
               </div>
             </div>
           ))
         ) : (
-          <div className='col-span-full text-center text-xl text-gray-500 border-none'>
-            لا يوجد عملاء بعد 🙁
+          <div className='col-span-full text-2xl text-center font-medium text-gray-800 border-none'>
+            دورنا في كل حتة... حتى تحت السجادة! 🧹
           </div>
         )}
       </section>

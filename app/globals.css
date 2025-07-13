@@ -26,12 +26,12 @@
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
     --radius: 0.65rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --sidebar: oklch(0.985 0 0);
+    --chart-1: #00ff95;
+    --chart-2: #ff0000;
+    --chart-3: #645e10;
+    --chart-4: #ffb900;
+    --chart-5: #fe9a00;
+    --sidebar: #fafafa;
     --sidebar-foreground: oklch(0.145 0 0);
     --sidebar-primary: oklch(0.205 0 0);
     --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -61,11 +61,11 @@
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-1: oklch(0.75 0.25 0); /* أحمر/برتقالي */
+    --chart-2: oklch(0.75 0.25 60); /* أصفر */
+    --chart-3: oklch(0.75 0.25 120); /* أخضر */
+    --chart-4: oklch(0.75 0.25 180); /* فيروزي */
+    --chart-5: oklch(0.75 0.25 240); /* أزرق */
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
     --sidebar-primary: oklch(0.488 0.243 264.376);

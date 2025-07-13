@@ -67,7 +67,7 @@ function Ele() {
                 <Button variant={Pathname == "/employees" ? "default" : "ghost"}>عمال و ادارة</Button>
             </Link>
             <Link href={"/shipping"}>
-                <Button variant={Pathname == "/shipping" ? "default" : "ghost"}>التوصيل و الشحن</Button>
+                <Button variant={Pathname == "/shipping" ? "default" : "ghost"}>الشحن والتوصيل</Button>
             </Link>
             <Link href={"/operations"}>
                 <Button variant={Pathname == "/operations" ? "default" : "ghost"}>العمليات</Button>

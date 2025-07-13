@@ -233,7 +233,7 @@ export default function InventoryComponent() {
           ))
         ) : (
           <div className='col-span-full text-2xl text-center font-medium text-gray-800 border-none'>
-            لا توجد منتجات حالياً بالمخزون 📦
+            دورنا في كل حتة... حتى تحت السجادة! 🧹
           </div>
         )}
       </section>

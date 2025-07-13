@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -12,6 +13,18 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Badge } from '../ui/badge'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../ui/alert-dialog'
+import { toast } from 'sonner'
 
 type Product = {
   id: number
@@ -63,7 +76,7 @@ export default function OrderComponent() {
 
   const addOrUpdateOrder = () => {
     if (!newOrder.customer || !newOrder.products?.length) {
-      alert('Customer name and products are required')
+      toast.info('الرجاء إدخال اسم العميل والمنتجات المطلوبة!')
       return
     }
 
@@ -72,7 +85,7 @@ export default function OrderComponent() {
       return (!product || Number(product.quantity) < Number(prodObj.quantity))
     })
     if (outOfStock) {
-      alert('في منتج أو أكثر الكمية غير كافية في المخزون!')
+      toast.info('في منتج أو أكثر الكمية غير كافية في المخزون!')
       return
     }
 
@@ -266,28 +279,45 @@ export default function OrderComponent() {
                   >
                     Edit
                   </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      if (confirm('Are you sure you want to delete this order?')) {
-                        const orderToDelete = orders.find(order => order.id === id)
-                        if (!orderToDelete) return
-                        const restoredProducts = products.map((product) => {
-                          const used = orderToDelete.products.find(p => p.name === product.name)
-                          return used ? {
-                            ...product,
-                            quantity: String(Number(product.quantity) + Number(used.quantity))
-                          } : product
-                        })
-                        localStorage.setItem('products', JSON.stringify(restoredProducts))
-                        setProducts(restoredProducts)
-                        saveOrders(orders.filter(order => order.id !== id))
-                      }
-                    }}
-                  >
-                    Delete
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger className='bg-white border px-3 rounded-sm'>
+                      حـذف
+                    </AlertDialogTrigger>
+                    <AlertDialogContent dir='rtl'>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className='text-center'>
+                          هـل انـت مـتـأكـد مـن حـذف العميل؟
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          <span>هل أنت متأكد إنك عايز تحذف العميل ده؟</span><br />
+                          <span>مش هتقدر ترجّعه تاني، لكن ممكن تلاقي الطلبات القديمة لسه محفوظة.</span>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>الـغـاء</AlertDialogCancel>
+                        <AlertDialogAction
+                          className='bg-rose-500'
+                          onClick={() => {
+                            toast.success('تم حذف العميل بنجاح')
+                            const orderToDelete = orders.find(order => order.id === id)
+                            if (!orderToDelete) return
+                            const restoredProducts = products.map((product) => {
+                              const used = orderToDelete.products.find(p => p.name === product.name)
+                              return used ? {
+                                ...product,
+                                quantity: String(Number(product.quantity) + Number(used.quantity))
+                              } : product
+                            })
+                            localStorage.setItem('products', JSON.stringify(restoredProducts))
+                            setProducts(restoredProducts)
+                            saveOrders(orders.filter(order => order.id !== id))
+                          }}
+                        >
+                          حـذف العميل
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             )

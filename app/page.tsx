@@ -1,4 +1,5 @@
-import { ThemeSwitcher } from "@/components/theme-switcher";
+import { ChartAreaInteractive } from "@/components/chart-bar-interactive";
+import { ChartBarStacked } from "@/components/tutorial/chart-bar-stacked";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,21 +12,25 @@ import { CommandIcon, ExternalLinkIcon, EyeIcon, EyeOffIcon } from "lucide-react
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center">
+    <main className="min-h-screen flex flex-col items-center mb-20">
       <div className="flex-1 w-full flex flex-col gap-20 items-center">
         <div className="flex flex-col w-full gap-10">
+          <div>
+            <ChartBarStacked />
+            {/* <ChartAreaInteractive /> */}
+          </div>
           <div className="w-full grid grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 *:w-full gap-3" dir="rtl">
-            <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0 font-medium bg-yellow-200" color="#ff6">
+            <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0 font-medium">
               <CardHeader className="flex justify-between items-center">
                 <CardTitle>طـلـبـات نـشـطـة</CardTitle>
                 <CardAction><Button variant={"secondary"} size={"icon"} className="rounded-full"><EyeIcon /></Button></CardAction>
               </CardHeader>
               <CardContent>
-                <h1 className="text-5xl font-medium">3</h1>
+                <h1 className="text-5xl font-medium text-emerald-500">3</h1>
                 <h3>طلبات اليوم (16)</h3>
               </CardContent>
             </Card>
-            <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0 font-medium bg-green-200" color="#ff6">
+            <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0 font-medium">
               <CardHeader className="flex justify-between items-center">
                 <CardTitle>أرباح اليوم</CardTitle>
                 <CardAction><Button variant={"secondary"} size={"icon"} className="rounded-full"><EyeOffIcon /></Button></CardAction>
@@ -36,7 +41,7 @@ export default function Home() {
                 <h3 className="text-rose-500">أرباح الاجمالية (مخفي)</h3>
               </CardContent>
             </Card>
-            <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0 font-medium bg-indigo-200" color="#ff6">
+            <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0 font-medium">
               <CardHeader className="flex justify-between items-center">
                 <CardTitle>قيمة المخزون</CardTitle>
                 <CardAction><Button variant={"secondary"} size={"icon"} className="rounded-full"><EyeIcon /></Button></CardAction>
@@ -46,7 +51,7 @@ export default function Home() {
                 <h3>قيمةالمخزون الحالي</h3>
               </CardContent>
             </Card>
-            <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0 font-medium bg-rose-200" color="#ff6">
+            <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0 font-medium">
               <CardHeader className="flex justify-between items-center">
                 <CardTitle>العملاء</CardTitle>
                 <CardAction><Button variant={"secondary"} size={"icon"} className="rounded-full"><EyeIcon /></Button></CardAction>
@@ -58,11 +63,6 @@ export default function Home() {
             </Card>
           </div>
           <div>
-            <div className="w-full grid grid-cols-3 max-sm:grid-cols-1 *:w-full gap-3">
-              <RenderCard />
-              <RenderCard />
-              <RenderCard />
-            </div>
           </div>
           <div className="w-full grid grid-cols-2 max-sm:grid-cols-1 *:w-full gap-3">
             <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0">
@@ -83,7 +83,7 @@ export default function Home() {
               <CardContent className="space-y-3">
                 <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0 font-medium border-dashed" color="#ff6">
                   <CardHeader className="flex justify-between items-center">
-                    <CardTitle className="flex justify-center items-center gap-2"><CommandIcon className="size-5 text-primary/80"/> #260035</CardTitle>
+                    <CardTitle className="flex justify-center items-center gap-2"><CommandIcon className="size-5 text-primary/80" /> #260035</CardTitle>
                     <CardAction><Button variant={"secondary"} size={"icon"} className="rounded-full"><ExternalLinkIcon /></Button></CardAction>
                   </CardHeader>
                   <CardContent>
@@ -93,7 +93,7 @@ export default function Home() {
                 </Card>
                 <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0 font-medium border-dashed" color="#ff6">
                   <CardHeader className="flex justify-between items-center">
-                    <CardTitle className="flex justify-center items-center gap-2"><CommandIcon className="size-5 text-primary/80"/> #260035</CardTitle>
+                    <CardTitle className="flex justify-center items-center gap-2"><CommandIcon className="size-5 text-primary/80" /> #260035</CardTitle>
                     <CardAction><Button variant={"secondary"} size={"icon"} className="rounded-full"><ExternalLinkIcon /></Button></CardAction>
                   </CardHeader>
                   <CardContent>
@@ -116,34 +116,7 @@ export default function Home() {
           </div>
 
         </div>
-        <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-          <p>
-            Powered by{" "}
-            <a
-              href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              Mu7ammad
-            </a>
-          </p>
-          <ThemeSwitcher />
-        </footer>
       </div>
     </main>
   );
-
-  function RenderCard() {
-    return <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0">
-      <CardHeader className="flex justify-between items-center">
-        <CardTitle>online</CardTitle>
-        <CardAction><Button variant={"secondary"} size={"icon"} className="rounded-full"><EyeIcon /></Button></CardAction>
-      </CardHeader>
-      <CardContent>
-        <h1 className="text-5xl font-medium">65</h1>
-        <h3>Card Content</h3>
-      </CardContent>
-    </Card>;
-  }
 }
