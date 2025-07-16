@@ -9,6 +9,8 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { ChartAreaInteractive } from '@/components/chart-bar-interactive'
+import { ChartBarStacked } from '@/components/tutorial/chart-bar-stacked'
 
 export default function Orders() {
     return (
@@ -37,17 +39,13 @@ export default function Orders() {
                         </DialogContent>
                     </Dialog>
                 </section>
-                <section className='grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-10 *:rounded-2xl *:border *:p-3 *:h-72'>
-                    <div className="bg-blue-100">
-                        <p>#32185</p>
-                    </div>
-                    <div className="bg-teal-100"></div>
-                    <div className="bg-teal-100"></div>
-                    <div className="bg-teal-100"></div>
-                    <div className="bg-green-100"></div>
-                    <div className="bg-teal-100"></div>
-                    <div className="bg-rose-100"></div>
-                    <div className="bg-yellow-100"></div>
+                <section className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 mt-10 *:rounded-2xl *:border *:p-3 *:h-auto *:w-full'>
+                    {/* <div className="bg-teal-100"> */}
+                    <ChartBarStacked />
+                    {/* </div> */}
+                    <ChartAreaInteractive />
+                    <ChartBarStacked />
+                    <ChartBarStacked />
                 </section>
             </div>
         </main>

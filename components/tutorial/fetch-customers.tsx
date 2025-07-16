@@ -37,6 +37,7 @@ type Customer = {
 
 export default function CustomersComponent() {
   const [customers, setCustomers] = useState<Customer[]>([])
+  
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({

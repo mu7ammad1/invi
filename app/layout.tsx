@@ -11,7 +11,7 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Frargy v1",
+  title: "Frargy v2",
   description: "The fastest way to build apps with Next.js and Supabase",
 };
 

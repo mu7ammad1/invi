@@ -1,4 +1,4 @@
-import { ChartAreaInteractive } from "@/components/chart-bar-interactive";
+// import { ChartAreaInteractive } from "@/components/chart-bar-interactive";
 // import { ChartBarStacked } from "@/components/tutorial/chart-bar-stacked";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,7 @@ export default function Home() {
         <div className="flex flex-col w-full gap-10">
           <div>
             {/* <ChartBarStacked /> */}
-            <ChartAreaInteractive />
+            {/* <ChartAreaInteractive /> */}
           </div>
           <div className="w-full grid grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 *:w-full gap-3" dir="rtl">
             <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0 font-medium">
@@ -37,7 +37,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <h1 className="text-5xl font-medium"><span className="text-3xl text-rose-500">مخفي</span></h1>
-                {/* <h3>أرباح الاجمالية (9012)</h3> */}
+                <h3>أرباح الاجمالية (9012)</h3>
                 <h3 className="text-rose-500">أرباح الاجمالية (مخفي)</h3>
               </CardContent>
             </Card>
@@ -61,8 +61,6 @@ export default function Home() {
                 <h3>Card Content</h3>
               </CardContent>
             </Card>
-          </div>
-          <div>
           </div>
           <div className="w-full grid grid-cols-2 max-sm:grid-cols-1 *:w-full gap-3">
             <Card className="p-0 m-0 *:px-2 *:py-1 shadow-none gap-0">
